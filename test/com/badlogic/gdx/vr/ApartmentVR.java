@@ -27,6 +27,7 @@ import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Plane;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.math.collision.Ray;
@@ -35,6 +36,7 @@ import com.badlogic.gdx.utils.JsonReader;
 import com.badlogic.gdx.vr.VRContext.Eye;
 import com.badlogic.gdx.vr.VRContext.Space;
 import com.badlogic.gdx.vr.VRContext.VRControllerButtons;
+import com.badlogic.gdx.vr.VRContext.VRControllerRole;
 import com.badlogic.gdx.vr.VRContext.VRDevice;
 import com.badlogic.gdx.vr.VRContext.VRDeviceListener;
 import com.badlogic.gdx.vr.VRContext.VRDeviceType;
@@ -120,7 +122,9 @@ public class ApartmentVR extends ApplicationAdapter {
 					Gdx.app.log(TAG, device + " button pressed: " + button);
 
 					if (device == context.getDeviceByType(VRDeviceType.Controller)) {
-						if (button == VRControllerButtons.SteamVR_Trigger) isTeleporting = true;
+						if (button == VRControllerButtons.SteamVR_Trigger) { 
+							isTeleporting = true;
+						}
 					}
 				}
 
@@ -128,8 +132,11 @@ public class ApartmentVR extends ApplicationAdapter {
 					Gdx.app.log(TAG, device + " button released: " + button);
 
 					if (device == context.getDeviceByType(VRDeviceType.Controller)) {
+						Gdx.app.log(TAG, " Device is controller");
 						if (button == VRControllerButtons.SteamVR_Trigger) {
+							Gdx.app.log(TAG, "button is trigger: " + VRControllerButtons.SteamVR_Trigger);
 							if (intersectControllerXZPlane(context.getDeviceByType(VRDeviceType.Controller), tmp)) {
+								Gdx.app.log(TAG, " intersected: " + tmp);
 								// Teleportation
 								// - Tracker space origin in world space is initially at [0,0,0]
 								// - When teleporting, we want to set the tracker space origin in world space to the
@@ -140,12 +147,17 @@ public class ApartmentVR extends ApplicationAdapter {
 								// teleportation point in world space
 								tmp2.set(context.getDeviceByType(VRDeviceType.HeadMountedDisplay).getPosition(Space.Tracker));
 								tmp2.y = 0;
-								tmp.sub(tmp2);
+//								tmp.sub(tmp2);
 
 								context.getTrackerSpaceOriginToWorldSpaceTranslationOffset().set(tmp);
 							}
 							isTeleporting = false;
 						}
+					}
+					if(button == VRControllerButtons.A) {
+						Matrix4 trackerSpaceToWorldspaceRotationOffset = context.getTrackerSpaceToWorldspaceRotationOffset();
+						float angle = device.getControllerRole().equals(VRControllerRole.LeftHand)?45:-45;
+						trackerSpaceToWorldspaceRotationOffset.rotate(Vector3.Y, angle);
 					}
 				}
 			});
@@ -169,6 +181,7 @@ public class ApartmentVR extends ApplicationAdapter {
 	private boolean intersectControllerXZPlane (VRDevice controller, Vector3 intersection) {
 		ray.origin.set(controller.getPosition(Space.World));
 		ray.direction.set(controller.getDirection(Space.World).nor());
+		ray.direction.rotate(controller.getRight(Space.World), -60);
 		return Intersector.intersectRayPlane(ray, xzPlane, intersection);
 	}
 

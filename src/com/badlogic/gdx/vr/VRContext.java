@@ -560,9 +560,12 @@ public class VRContext implements Disposable {
 			return;
 		}
 		
+		System.out.println("Type "+ type);
+		
 		VRControllerRole role = VRControllerRole.Unknown;
 		if (type == VRDeviceType.Controller) {
 			int r =  VRSystem.VRSystem_GetControllerRoleForTrackedDeviceIndex(index);
+			System.out.println("Role "+r);
 			switch(r) {
 			case VR.ETrackedControllerRole_TrackedControllerRole_LeftHand:
 				role = VRControllerRole.LeftHand;
@@ -572,6 +575,7 @@ public class VRContext implements Disposable {
 				break;      				
 			} 
 		}
+		System.out.println("Role "+role);
 		devices[index] = new VRDevice(devicePoses[index], type, role);
 		devices[index].updateAxesAndPosition();
 	}
